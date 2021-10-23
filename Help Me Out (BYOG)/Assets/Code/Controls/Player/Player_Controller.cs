@@ -12,7 +12,9 @@ public class Player_Controller : MonoBehaviour
     
     Vector2 velocity;
     [Header("Controls")]
-    [SerializeField] float jumpStregth = 5f, speed = 2f;
+    [SerializeField] float jumpStregth = 5f;
+    [SerializeField] float speed = 2f;
+    [SerializeField] LayerMask jumpable;
 
     [Header("Refrences")]
     [SerializeField] Transform groundcheck;
@@ -45,7 +47,6 @@ public class Player_Controller : MonoBehaviour
         SetPlayerState();
         RunAnim();
 
-        print(currentPlayerState);
     }
 
     void Move(InputAction.CallbackContext ctx){
@@ -54,21 +55,22 @@ public class Player_Controller : MonoBehaviour
 
     void RunAnim(){
         animator.SetBool("Running", currentPlayerState == PlayerState.Running);
+        print(CanJump());
     }
 
     void SetPlayerState(){
         if(!CanJump())
             currentPlayerState = PlayerState.inAir;
-        else if(velocity.x == 0)
-            currentPlayerState = PlayerState.Idle;
-        else
+        else if(velocity.x != 0)
             currentPlayerState = PlayerState.Running;
+        else
+            currentPlayerState = PlayerState.Idle;
     }
 
     bool CanJump(){
-        bool jump = Physics2D.OverlapBox(groundcheck.position, new Vector2(selfCollider.size.x, 0.1f), 0);
-        if(jump)
-            animator.SetBool("Squash", currentPlayerState == PlayerState.inAir);
+        bool jump = Physics2D.OverlapBox(groundcheck.position, new Vector2(selfCollider.size.x, 0.1f), 0, jumpable);
+        if(jump && currentPlayerState == PlayerState.inAir)
+            animator.SetTrigger("Squash");
         return jump;
     }
 

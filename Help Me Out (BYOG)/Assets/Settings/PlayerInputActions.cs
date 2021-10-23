@@ -114,14 +114,76 @@ public class @PlayerInputActions : IInputActionCollection, IDisposable
                     ""isPartOfComposite"": true
                 }
             ]
+        },
+        {
+            ""name"": ""DeveloperControls"",
+            ""id"": ""ebcf9943-f672-4051-823d-2688e3e6462b"",
+            ""actions"": [
+                {
+                    ""name"": ""MouseDown"",
+                    ""type"": ""Button"",
+                    ""id"": ""034a429d-9e7e-42f6-8be1-0d59ab84d257"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
+                    ""name"": ""MousePosition"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""09883b32-33dd-4ba4-8340-da1df73fcef9"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""c246e846-fee9-402b-938e-5537a5854fa4"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Mouse"",
+                    ""action"": ""MouseDown"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""11d36047-7847-4ef7-9dec-317114c7a129"",
+                    ""path"": ""<Mouse>/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""MousePosition"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
-    ""controlSchemes"": []
+    ""controlSchemes"": [
+        {
+            ""name"": ""Mouse"",
+            ""bindingGroup"": ""Mouse"",
+            ""devices"": [
+                {
+                    ""devicePath"": ""<VirtualMouse>"",
+                    ""isOptional"": false,
+                    ""isOR"": false
+                }
+            ]
+        }
+    ]
 }");
         // PlayerActions
         m_PlayerActions = asset.FindActionMap("PlayerActions", throwIfNotFound: true);
         m_PlayerActions_Jump = m_PlayerActions.FindAction("Jump", throwIfNotFound: true);
         m_PlayerActions_Movement = m_PlayerActions.FindAction("Movement", throwIfNotFound: true);
+        // DeveloperControls
+        m_DeveloperControls = asset.FindActionMap("DeveloperControls", throwIfNotFound: true);
+        m_DeveloperControls_MouseDown = m_DeveloperControls.FindAction("MouseDown", throwIfNotFound: true);
+        m_DeveloperControls_MousePosition = m_DeveloperControls.FindAction("MousePosition", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -208,9 +270,64 @@ public class @PlayerInputActions : IInputActionCollection, IDisposable
         }
     }
     public PlayerActionsActions @PlayerActions => new PlayerActionsActions(this);
+
+    // DeveloperControls
+    private readonly InputActionMap m_DeveloperControls;
+    private IDeveloperControlsActions m_DeveloperControlsActionsCallbackInterface;
+    private readonly InputAction m_DeveloperControls_MouseDown;
+    private readonly InputAction m_DeveloperControls_MousePosition;
+    public struct DeveloperControlsActions
+    {
+        private @PlayerInputActions m_Wrapper;
+        public DeveloperControlsActions(@PlayerInputActions wrapper) { m_Wrapper = wrapper; }
+        public InputAction @MouseDown => m_Wrapper.m_DeveloperControls_MouseDown;
+        public InputAction @MousePosition => m_Wrapper.m_DeveloperControls_MousePosition;
+        public InputActionMap Get() { return m_Wrapper.m_DeveloperControls; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(DeveloperControlsActions set) { return set.Get(); }
+        public void SetCallbacks(IDeveloperControlsActions instance)
+        {
+            if (m_Wrapper.m_DeveloperControlsActionsCallbackInterface != null)
+            {
+                @MouseDown.started -= m_Wrapper.m_DeveloperControlsActionsCallbackInterface.OnMouseDown;
+                @MouseDown.performed -= m_Wrapper.m_DeveloperControlsActionsCallbackInterface.OnMouseDown;
+                @MouseDown.canceled -= m_Wrapper.m_DeveloperControlsActionsCallbackInterface.OnMouseDown;
+                @MousePosition.started -= m_Wrapper.m_DeveloperControlsActionsCallbackInterface.OnMousePosition;
+                @MousePosition.performed -= m_Wrapper.m_DeveloperControlsActionsCallbackInterface.OnMousePosition;
+                @MousePosition.canceled -= m_Wrapper.m_DeveloperControlsActionsCallbackInterface.OnMousePosition;
+            }
+            m_Wrapper.m_DeveloperControlsActionsCallbackInterface = instance;
+            if (instance != null)
+            {
+                @MouseDown.started += instance.OnMouseDown;
+                @MouseDown.performed += instance.OnMouseDown;
+                @MouseDown.canceled += instance.OnMouseDown;
+                @MousePosition.started += instance.OnMousePosition;
+                @MousePosition.performed += instance.OnMousePosition;
+                @MousePosition.canceled += instance.OnMousePosition;
+            }
+        }
+    }
+    public DeveloperControlsActions @DeveloperControls => new DeveloperControlsActions(this);
+    private int m_MouseSchemeIndex = -1;
+    public InputControlScheme MouseScheme
+    {
+        get
+        {
+            if (m_MouseSchemeIndex == -1) m_MouseSchemeIndex = asset.FindControlSchemeIndex("Mouse");
+            return asset.controlSchemes[m_MouseSchemeIndex];
+        }
+    }
     public interface IPlayerActionsActions
     {
         void OnJump(InputAction.CallbackContext context);
         void OnMovement(InputAction.CallbackContext context);
+    }
+    public interface IDeveloperControlsActions
+    {
+        void OnMouseDown(InputAction.CallbackContext context);
+        void OnMousePosition(InputAction.CallbackContext context);
     }
 }

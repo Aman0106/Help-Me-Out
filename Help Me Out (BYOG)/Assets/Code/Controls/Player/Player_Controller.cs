@@ -11,25 +11,42 @@ public class Player_Controller : MonoBehaviour
     Animator animator;
     
     Vector2 velocity;
+    float slideVelocity;
+
     [Header("Controls")]
     [SerializeField] float jumpStregth = 5f;
     [SerializeField] float speed = 2f;
-    [SerializeField] LayerMask jumpable;
+    [SerializeField] float wallSlideSpeed = 0.1f;
+    [SerializeField] float wallSlideMaxspeed = 4f;
+
+    [Header("Collsions Checks")]
+    [SerializeField] float groundcheckDepth = 0.1f;
+    [SerializeField] float groundcheckLength = 0.5f;
+    [SerializeField] float wallcheckLength = 0.1f;
+    [SerializeField] float wallcheckHieght = 0.9f;
+
+    [Header("Graphics")]
+    [SerializeField] float jumpParticlesDelay = 0.02f;
 
     [Header("Refrences")]
     [SerializeField] Transform groundcheck;
+    [SerializeField] Transform wallcheck;
+    [SerializeField]BoxCollider2D selfCollider;
+    [SerializeField] LayerMask jumpable;
+    [SerializeField] ParticleSystem runParticles;
+    [SerializeField] ParticleSystem wallslideParticles;
+    [SerializeField] GameObject jumpParticleSystem;
 
     enum PlayerState{Idle, inAir, Running}
     PlayerState currentPlayerState;
 
-    BoxCollider2D selfCollider;
 
     void Awake()
     {
         animator = GetComponent<Animator>();
 
         controls = new PlayerInputActions();
-        controls.PlayerActions.Enable();
+        EnableDissable(true);
 
         controls.PlayerActions.Jump.performed += Jump;
         controls.PlayerActions.Movement.performed += Move;
@@ -42,20 +59,45 @@ public class Player_Controller : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        velocity = new Vector2(controls.PlayerActions.Movement.ReadValue<float>() * speed, rb.velocity.y);
-
+        Movement();
+        WallSlide();
         SetPlayerState();
         RunAnim();
 
     }
 
     void Move(InputAction.CallbackContext ctx){
+        // transform.Rotate(new Vector2(0, 180f * controls.PlayerActions.Movement.ReadValue<float>()));
+    }
 
+    void Movement(){
+        float xvelocity = 0;
+        if(!WallCheck())
+            xvelocity = controls.PlayerActions.Movement.ReadValue<float>() * speed;
+        velocity = new Vector2(xvelocity, rb.velocity.y);
+    }
+
+    void WallSlide(){
+        if(WallCheck() && rb.velocity.y <= 0){
+            slideVelocity -= wallSlideSpeed * Time.deltaTime;
+            slideVelocity = Mathf.Clamp(slideVelocity, -wallSlideMaxspeed, rb.velocity.y );
+            velocity.y = slideVelocity;
+            // wallslideParticles.Simulate(1);
+
+        }else{
+            slideVelocity = 0;
+            // wallslideParticles.Simulate(0);
+        }
     }
 
     void RunAnim(){
         animator.SetBool("Running", currentPlayerState == PlayerState.Running);
-        print(CanJump());
+        if(currentPlayerState == PlayerState.Running){
+            // runParticles.duration = 1;
+        }
+        else{
+            // runParticles.duration =;
+        }
     }
 
     void SetPlayerState(){
@@ -68,14 +110,22 @@ public class Player_Controller : MonoBehaviour
     }
 
     bool CanJump(){
-        bool jump = Physics2D.OverlapBox(groundcheck.position, new Vector2(selfCollider.size.x, 0.1f), 0, jumpable);
+        bool jump = Physics2D.OverlapBox(groundcheck.position, new Vector2(groundcheckLength,groundcheckDepth), 0, jumpable);
         if(jump && currentPlayerState == PlayerState.inAir)
             animator.SetTrigger("Squash");
         return jump;
     }
 
+    bool WallCheck(){
+        if(!CanJump()){
+            bool isWall = Physics2D.OverlapBox(wallcheck.position, new Vector2(wallcheckLength, wallcheckHieght), 0, jumpable) || Physics2D.OverlapBox(new Vector2(wallcheck.position.x - 0.85f, wallcheck.position.y), new Vector2(wallcheckLength, wallcheckHieght), 0, jumpable);
+            return  isWall;
+        }
+
+        return false;
+    }
+
     private void FixedUpdate() {
-        // rb2D.MovePosition(rb2D.position + velocity * Time.fixedDeltaTime);
         rb.velocity = velocity;
 
     }
@@ -85,6 +135,28 @@ public class Player_Controller : MonoBehaviour
             return;
         rb.velocity = new Vector2(rb.velocity.x,jumpStregth);
         animator.SetTrigger("Squish");
+        StartCoroutine(SpawnJumpParticle(jumpParticlesDelay));
+    }
+
+    IEnumerator SpawnJumpParticle(float time){
+        yield return new WaitForSeconds(time);
+
+        GameObject.Instantiate(jumpParticleSystem, groundcheck.position, Quaternion.Euler(Vector2.up));
+    }
+
+    public void EnableDissable(bool val){
+        if (val)
+            controls.PlayerActions.Enable();
+        else
+            controls.PlayerActions.Disable();
+    }
+
+    private void OnDrawGizmosSelected() {
+        Gizmos.color = Color.green;
+        Gizmos.DrawCube(groundcheck.position, new Vector3(groundcheckLength, groundcheckDepth, 0.1f));
+
+        Gizmos.DrawCube(wallcheck.position, new Vector3(wallcheckLength , wallcheckHieght, 0.1f));
+        Gizmos.DrawCube(new Vector2(wallcheck.position.x - 0.85f, wallcheck.position.y), new Vector3(wallcheckLength, wallcheckHieght, 0.1f));
     }
 
 }

@@ -140,9 +140,10 @@ MonoBehaviour:
   jumpable:
     serializedVersion: 2
     m_Bits: 1
+  cm: {fileID: 0}
   runParticles: {fileID: 0}
   wallslideParticles: {fileID: 0}
-  jumpParticleSystem: {fileID: 0}
+  jumpParticleSystem: {fileID: 551459922758513843, guid: dd1bd07876dbcfc46a9596342d019428, type: 3}
 --- !u!95 &3131278325796300582
 Animator:
   serializedVersion: 3
@@ -326,7 +327,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

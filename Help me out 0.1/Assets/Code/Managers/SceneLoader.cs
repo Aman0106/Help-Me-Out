@@ -20,7 +20,6 @@ public class SceneLoader : MonoBehaviour
             }
             case Type.Respawn:{
                 GameManager.Instance.Respawn();
-                GameSceneManager.Instance.Respawn();
                 break;
             }
             default:

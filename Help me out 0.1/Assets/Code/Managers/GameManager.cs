@@ -34,7 +34,10 @@ public class GameManager : MonoBehaviour {
     public void Respawn(){
         if(--lives <= 0)
             GameSceneManager.Instance.Restart();
+        else{
 
+            GameSceneManager.Instance.Respawn();
+        }
         plLivesText.text = "Lives = " + lives.ToString();
         dlLivesText.text = "Lives = " + lives.ToString();
     }

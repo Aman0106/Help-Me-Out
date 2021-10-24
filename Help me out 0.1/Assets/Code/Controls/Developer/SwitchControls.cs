@@ -7,11 +7,14 @@ public class SwitchControls : MonoBehaviour{
 
     Player_Controller playerController;
     DeveloperControls developerControls;
+
+    [SerializeField] GameObject playerUI, developerUI;
     
-    private void Awake() {
+    private void Start() {
         currentControlState = ControlState.Player;
         playerController = FindObjectOfType<Player_Controller>();
         developerControls = FindObjectOfType<DeveloperControls>();
+        PlayerState();
     }
 
     public void SwapControl(){
@@ -31,12 +34,27 @@ public class SwitchControls : MonoBehaviour{
         currentControlState = ControlState.Developer;
         developerControls.EnableDissable(true);
         playerController.EnableDissable(false);
+
+        developerUI.SetActive(true);
+        playerUI.SetActive(false);
+
+        GameManager.Instance.SetTranseperency(0.5f);
+
+        if(HelpTurns.Instance != null){
+            HelpTurns.Instance.UpdateTurns();
+        }
     }
 
     void PlayerState(){
         currentControlState = ControlState.Player;
+
         playerController.EnableDissable(true);
         developerControls.EnableDissable(false);
+
+        playerUI.SetActive(true);
+        developerUI.SetActive(false);
+
+        GameManager.Instance.SetTranseperency(1f);
     }
 
 }

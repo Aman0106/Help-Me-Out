@@ -21,6 +21,9 @@ public class DevelopsCamera : MonoBehaviour
     }
 
     private void OnEnable() {
-        transform.position = new Vector3(player.position.x, transform.position.y, transform.position.z);
+
+        Vector3 pos = new Vector3(player.position.x, transform.position.y, transform.position.z);
+
+        transform.position = pos;
     }
 }
